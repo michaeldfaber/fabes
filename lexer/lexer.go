@@ -1,53 +1,14 @@
-package main
+package lexer
 
 import (
 	"bufio"
-	"fmt"
 	"io"
-	"os"
 	"unicode"
 )
 
-type Token int
-
-const (
-	EOF = iota
-	ILLEGAL
-	IDENT
-	INT
-	SEMI // ;
-
-	// Infix notation: X + Y. Operators are written in-between their operands.
-	ADD // +
-	SUB // -
-	MUL // *
-	DIV // /
-
-	ASSIGN // =
-)
-
-var tokens = []string{
-	EOF:     	"EOF",
-	ILLEGAL: 	"ILLEGAL",
-	IDENT:   	"IDENT",
-	INT:     	"INT",
-	SEMI:    	";",
-
-	ADD: 		"+",
-	SUB: 		"-",
-	MUL: 		"*",
-	DIV: 		"/",
-
-	ASSIGN: 	"=",
-}
-
-func (t Token) String() string {
-	return tokens[t]
-}
-
 type Position struct {
-	line   int
-	column int
+	Line   int
+	Column int
 }
 
 type Lexer struct {
@@ -57,7 +18,7 @@ type Lexer struct {
 
 func NewLexer(reader io.Reader) *Lexer {
 	return &Lexer{
-		pos:    Position{line: 1, column: 0},
+		pos:    Position{Line: 1, Column: 0},
 		reader: bufio.NewReader(reader),
 	}
 }
@@ -77,7 +38,7 @@ func (l *Lexer) Lex() (Position, Token, string) {
 		}
 
 		// update the column to the position of the newly read in rune
-        l.pos.column++
+        l.pos.Column++
 
         switch r {
         case '\n':
@@ -117,8 +78,8 @@ func (l *Lexer) Lex() (Position, Token, string) {
 }
 
 func (l *Lexer) resetPosition() {
-	l.pos.line++
-	l.pos.column = 0
+	l.pos.Line++
+	l.pos.Column = 0
 }
 
 func (l *Lexer) backup() {
@@ -126,7 +87,7 @@ func (l *Lexer) backup() {
 		panic(err)
 	}
 	
-	l.pos.column--
+	l.pos.Column--
 }
 
 func (l *Lexer) lexInt() string {
@@ -140,7 +101,7 @@ func (l *Lexer) lexInt() string {
 			}
 		}
 
-		l.pos.column++
+		l.pos.Column++
 		if unicode.IsDigit(r) {
 			lit = lit + string(r)
 		} else {
@@ -164,7 +125,7 @@ func (l *Lexer) lexIdent() string {
 			}
 		}
 			
-        l.pos.column++
+        l.pos.Column++
 		if unicode.IsLetter(r) {
 			lit = lit + string(r)
 		} else {
@@ -172,22 +133,5 @@ func (l *Lexer) lexIdent() string {
 			l.backup()
 			return lit
 		}
-	}
-}
-
-func main() {
-	file, err := os.Open("dreaming.fbs")
-	if err != nil {
-		panic(err)
-	}
-
-	lexer := NewLexer(file)
-	for {
-		pos, tok, lit := lexer.Lex()
-		if tok == EOF {
-			break
-		}
-
-		fmt.Printf("%d:%d\t%s\t%s\n", pos.line, pos.column, tok, lit)
 	}
 }
