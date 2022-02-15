@@ -1,6 +1,6 @@
 # FabesLang
 
-The Fabes Programming Language.
+The Fabes Programming Language. Compiler written in Golang.
 
 ## About
 
