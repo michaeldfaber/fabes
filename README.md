@@ -18,3 +18,4 @@ Test (what I've got so far) by running `go run main.go`
 
 #### Abstract Syntax Tree (AST)
 - [Abstract Syntax Tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree) by Wikipedia
+- [go/ast](https://pkg.go.dev/go/ast)
