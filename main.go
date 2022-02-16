@@ -3,7 +3,8 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	lexer "github.com/michaeldfaber/fabes/lexer"
+	"github.com/michaeldfaber/fabes/lexer"
+	"github.com/michaeldfaber/fabes/token"
 )
 
 func main() {
@@ -16,15 +17,15 @@ func main() {
 	l := lexer.New(text)
 
 	for {
-		token := l.NextToken()
-		if token.Type == lexer.EOF {
+		t := l.NextToken()
+		if t.Type == token.EOF {
 			break
 		}
 		
-		if token.Type == lexer.Identifier {
-			fmt.Printf("%d\t%s\t%s\n", l.Position, token.Type, token.Literal)
+		if t.Type == token.Identifier {
+			fmt.Printf("%d\t%s\t%s\n", l.Position, t.Type, t.Literal)
 		} else {
-			fmt.Printf("%d\t%s\t\t%s\n", l.Position, token.Type, token.Literal)
+			fmt.Printf("%d\t%s\t\t%s\n", l.Position, t.Type, t.Literal)
 		}
 	}
 }
