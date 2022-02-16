@@ -12,4 +12,4 @@ Test (what I've got so far) by running `go run main.go`
 
 - [Lexical Analysis](https://en.wikipedia.org/wiki/Lexical_analysis)
 - [How To Write A Lexer In Go](https://www.aaronraff.dev/blog/how-to-write-a-lexer-in-go) by Aaron Ruff
-- [monkey-go](https://github.com/kitasuke/monkey-go)
+- [monkey-go](https://github.com/kitasuke/monkey-go) by Yusuke Kita
