@@ -1,10 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"github.com/michaeldfaber/fabes/lexer"
-	"github.com/michaeldfaber/fabes/token"
+	"github.com/michaeldfaber/fabes/parser"
 )
 
 func main() {
@@ -15,17 +14,7 @@ func main() {
 
     text := string(content)
 	l := lexer.New(text)
+	p := parser.New(l);
 
-	for {
-		t := l.NextToken()
-		if t.Type == token.EOF {
-			break
-		}
-		
-		if t.Type == token.Identifier {
-			fmt.Printf("%d\t%s\t%s\n", l.Position, t.Type, t.Literal)
-		} else {
-			fmt.Printf("%d\t%s\t\t%s\n", l.Position, t.Type, t.Literal)
-		}
-	}
+	p.ParseProgram();
 }

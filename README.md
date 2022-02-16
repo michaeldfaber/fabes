@@ -10,6 +10,11 @@ Test (what I've got so far) by running `go run main.go`
 
 ## Resources
 
-- [Lexical Analysis](https://en.wikipedia.org/wiki/Lexical_analysis)
-- [How To Write A Lexer In Go](https://www.aaronraff.dev/blog/how-to-write-a-lexer-in-go) by Aaron Ruff
 - [monkey-go](https://github.com/kitasuke/monkey-go) by Yusuke Kita
+
+#### Lexing
+- [Lexical Analysis](https://en.wikipedia.org/wiki/Lexical_analysis) by Wikipedia
+- [How To Write A Lexer In Go](https://www.aaronraff.dev/blog/how-to-write-a-lexer-in-go) by Aaron Ruff
+
+#### Abstract Syntax Tree (AST)
+- [Abstract Syntax Tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree) by Wikipedia
