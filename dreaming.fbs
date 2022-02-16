@@ -1,4 +1,8 @@
-a = 5;
-b = a + 6;
-c + 123;
-5+12;
+var a = 5;
+var b = a + 6;
+var c = "Hello World!";
+var d = 5 + 12;
+
+if (a == 5) {
+    b = d;
+}

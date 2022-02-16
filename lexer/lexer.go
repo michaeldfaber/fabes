@@ -1,137 +1,165 @@
 package lexer
 
-import (
-	"bufio"
-	"io"
-	"unicode"
-)
-
-type Position struct {
-	Line   int
-	Column int
-}
-
 type Lexer struct {
-	pos    Position
-	reader *bufio.Reader
+	input        string
+	Position     int
+	nextPosition int
+	ch           byte
 }
 
-func NewLexer(reader io.Reader) *Lexer {
-	return &Lexer{
-		pos:    Position{Line: 1, Column: 0},
-		reader: bufio.NewReader(reader),
-	}
+func New(input string) *Lexer {
+	l := &Lexer{input: input}
+	l.readChar()
+	return l
 }
 
-func (l *Lexer) Lex() (Position, Token, string) {
-	// keep looping until we return a token
-	for {
-		r, _, err := l.reader.ReadRune()
-		if err != nil {
-			if err == io.EOF {
-				return l.pos, EOF, ""
-			}
+func (l *Lexer) NextToken() Token {
+	var tok Token
 
-			// at this point there isn't much we can do, and the compiler
-			// should just return the raw error to the user
-			panic(err)
-		}
+	l.skipWhitespace()
 
-		// update the column to the position of the newly read in rune
-        l.pos.Column++
-
-        switch r {
-        case '\n':
-            l.resetPosition()
-        case ';':
-            return l.pos, SEMI, ";"
-        case '+':
-            return l.pos, ADD, "+"
-        case '-':
-            return l.pos, SUB, "-"
-        case '*':
-            return l.pos, MUL, "*"
-        case '/':
-            return l.pos, DIV, "/"
-        case '=':
-            return l.pos, ASSIGN, "="
-        default:
-            if unicode.IsSpace(r) {
-                continue // nothing to do here, just move on
-            } else if unicode.IsDigit(r) {
-				// backup and let lexInt rescan the beginning of the int
-				startPos := l.pos
-				l.backup()
-				lit := l.lexInt()
-				return startPos, INT, lit
-			} else if unicode.IsLetter(r) {
-				// backup and let lexIdent rescan the beginning of the ident
-				startPos := l.pos
-				l.backup()
-				lit := l.lexIdent()
-				return startPos, IDENT, lit
-			} else {
-				return l.pos, ILLEGAL, string(r)
-			}
-        }
-	}
-}
-
-func (l *Lexer) resetPosition() {
-	l.pos.Line++
-	l.pos.Column = 0
-}
-
-func (l *Lexer) backup() {
-	if err := l.reader.UnreadRune(); err != nil {
-		panic(err)
-	}
-	
-	l.pos.Column--
-}
-
-func (l *Lexer) lexInt() string {
-	var lit string
-	for {
-		r, _, err := l.reader.ReadRune()
-		if err != nil {
-			if err == io.EOF {
-				// at the end of the int
-				return lit
-			}
-		}
-
-		l.pos.Column++
-		if unicode.IsDigit(r) {
-			lit = lit + string(r)
+	switch l.ch {
+	case '=':
+		if l.peekChar() == '=' {
+			ch := l.ch
+			l.readChar()
+			literal := string(ch) + string(l.ch)
+			tok = Token { Type: Equal, Literal: literal }
 		} else {
-			// scanned something not in the integer
-			l.backup()
-			return lit
+			tok = newToken(Assign, l.ch)
 		}
+	case '+':
+		tok = newToken(Plus, l.ch)
+	case '-':
+		tok = newToken(Minus, l.ch)
+	case '!':
+		if l.peekChar() == '=' {
+			ch := l.ch
+			l.readChar()
+			literal := string(ch) + string(l.ch)
+			tok = Token { Type: NotEqual, Literal: literal }
+		} else {
+			tok = newToken(Bang, l.ch)
+		}
+	case '*':
+		tok = newToken(Asterisk, l.ch)
+	case '/':
+		tok = newToken(Slash, l.ch)
+	case '<':
+		if l.peekChar() == '=' {
+			ch := l.ch
+			l.readChar()
+			literal := string(ch) + string(l.ch)
+			tok = Token { Type: LessThanOrEqual, Literal: literal }
+		} else {
+			tok = newToken(LessThan, l.ch)
+		}
+	case '>':
+		if l.peekChar() == '=' {
+			ch := l.ch
+			l.readChar()
+			literal := string(ch) + string(l.ch)
+			tok = Token { Type: GreaterThanOrEqual, Literal: literal }
+		} else {
+			tok = newToken(GreaterThan, l.ch)
+		}
+	case ',':
+		tok = newToken(Comma, l.ch)
+	case ';':
+		tok = newToken(Semicolon, l.ch)
+	case ':':
+		tok = newToken(Colon, l.ch)
+	case '(':
+		tok = newToken(LeftParen, l.ch)
+	case ')':
+		tok = newToken(RightParen, l.ch)
+	case '{':
+		tok = newToken(LeftBrace, l.ch)
+	case '}':
+		tok = newToken(RightBrace, l.ch)
+	case '[':
+		tok = newToken(LeftBracket, l.ch)
+	case ']':
+		tok = newToken(RightBracket, l.ch)
+	case '"':
+		tok.Type = String
+		tok.Literal = l.readString()
+	case 0:
+		tok.Literal = ""
+		tok.Type = EOF
+	default:
+		if isLetter(l.ch) {
+			tok.Literal = l.readIdentifier()
+			tok.Type = LookupIdentifierType(tok.Literal)
+			return tok
+		} else if isDigit(l.ch) {
+			tok.Literal = l.readNumber()
+			tok.Type = Int
+			return tok
+		} else {
+			tok = newToken(Illegal, l.ch)
+		}
+	}
+
+	l.readChar()
+	return tok
+}
+
+func newToken(tokenType string, ch byte) Token {
+	return Token { Type: tokenType, Literal: string(ch) }
+}
+
+func (l *Lexer) readChar() {
+	l.ch = l.peekChar()
+	l.Position = l.nextPosition
+	l.nextPosition += 1
+}
+
+func (l *Lexer) readString() string {
+	pos := l.Position + 1
+	for {
+		l.readChar()
+		if l.ch == '"' || l.ch == 0 {
+			break
+		}
+	}
+	return l.input[pos:l.Position]
+}
+
+func (l *Lexer) readNumber() string {
+	pos := l.Position
+	for isDigit(l.ch) {
+		l.readChar()
+	}
+	return l.input[pos:l.Position]
+}
+
+func (l *Lexer) readIdentifier() string {
+	pos := l.Position
+	for isLetter(l.ch) {
+		l.readChar()
+	}
+	return l.input[pos:l.Position]
+}
+
+func isLetter(ch byte) bool {
+	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
+}
+
+func isDigit(ch byte) bool {
+	return '0' <= ch && ch <= '9'
+}
+
+func (l *Lexer) skipWhitespace() {
+	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
+		l.readChar()
 	}
 }
 
-// lexIdent scans the input until the end of an identifier and then returns the
-// literal.
-func (l *Lexer) lexIdent() string {
-	var lit string
-	for {
-		r, _, err := l.reader.ReadRune()
-		if err != nil {
-			if err == io.EOF {
-				// at the end of the identifier
-				return lit
-			}
-		}
-			
-        l.pos.Column++
-		if unicode.IsLetter(r) {
-			lit = lit + string(r)
-		} else {
-			// scanned something not in the identifier
-			l.backup()
-			return lit
-		}
+func (l *Lexer) peekChar() byte {
+	if l.nextPosition >= len(l.input) {
+		return 0
+	} else {
+		return l.input[l.nextPosition]
 	}
 }

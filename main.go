@@ -2,23 +2,29 @@ package main
 
 import (
 	"fmt"
-	"os"
+	"io/ioutil"
 	lexer "github.com/michaeldfaber/fabes/lexer"
 )
 
 func main() {
-	file, err := os.Open("dreaming.fbs")
-	if err != nil {
-		panic(err)
-	}
+	content, err := ioutil.ReadFile("dreaming.fbs")
+    if err != nil {
+        panic(err)
+    }
 
-	l := lexer.NewLexer(file)
+    text := string(content)
+	l := lexer.New(text)
+
 	for {
-		pos, tok, lit := l.Lex()
-		if tok == lexer.EOF {
+		token := l.NextToken()
+		if token.Type == lexer.EOF {
 			break
 		}
-
-		fmt.Printf("%d:%d\t%s\t%s\n", pos.Line, pos.Column, tok, lit)
+		
+		if token.Type == lexer.Identifier {
+			fmt.Printf("%d\t%s\t%s\n", l.Position, token.Type, token.Literal)
+		} else {
+			fmt.Printf("%d\t%s\t\t%s\n", l.Position, token.Type, token.Literal)
+		}
 	}
 }
