@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -97,6 +98,14 @@ func (p *Parser) ParseProgram() *ast.Program {
 
 	for p.currentToken.Type != token.EOF {
 		stmt := p.parseStatement()
+
+		s, err := json.Marshal(stmt)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Println(string(s));
+		}
+
 		if stmt != nil {
 			program.Statements = append(program.Statements, stmt)
 		}
@@ -143,6 +152,7 @@ func (p *Parser) parseVarStatement() *ast.VarStatement {
 	if p.peekTokenIs(token.Semicolon) {
 		p.nextToken()
 	}
+
 	return stmt
 }
 
