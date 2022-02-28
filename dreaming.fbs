@@ -3,6 +3,8 @@ var b = a + 6;
 var c = "Hello World!";
 var d = 5 + 12;
 
+print(5)
+
 if (a == 5) {
-    b = d;
+    print("Testing 1");
 }
